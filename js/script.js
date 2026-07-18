@@ -91,6 +91,100 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  /* ---------- 2b. Testimonial video slider ----------
+     Steps one video every 4s in an endless loop.
+     Thumbnails only — the YouTube player loads on click,
+     and the loop pauses while a video is playing. */
+  const tSlider = document.querySelector("[data-tslider]");
+  if (tSlider) {
+    const track = tSlider.querySelector(".t-track");
+    const originals = Array.from(track.children);
+    const GAP = 24;
+
+    // Duplicate the set once so the wrap-around is invisible.
+    originals.forEach(el => track.appendChild(el.cloneNode(true)));
+    // Add a "Watch on YouTube" escape hatch to every card, then remember
+    // each card's thumbnail so it can be restored after playback.
+    const ytLink = id =>
+      '<a class="yt-link" href="https://www.youtube.com/shorts/' + id +
+      '" target="_blank" rel="noopener">Watch on YouTube &#8599;</a>';
+    track.querySelectorAll(".t-video").forEach(c => {
+      c.insertAdjacentHTML("beforeend", ytLink(c.dataset.yt));
+      c.dataset.thumb = c.innerHTML;
+    });
+
+    let setWidth = 0;
+    const measure = () => {
+      const last = originals[originals.length - 1];
+      setWidth = last.offsetLeft + last.offsetWidth - originals[0].offsetLeft + GAP;
+    };
+    measure();
+    window.addEventListener("resize", measure);
+
+    const stepSize = () => track.children[0].getBoundingClientRect().width + GAP;
+    const wrap = () => {
+      if (setWidth > 0 && track.scrollLeft >= setWidth) {
+        track.style.scrollBehavior = "auto";
+        track.scrollLeft -= setWidth;
+        track.style.scrollBehavior = "";
+      }
+    };
+
+    let hovered = false;
+    let playing = false;
+    let holdUntil = 0;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const stopVideos = () => {
+      track.querySelectorAll(".t-video iframe").forEach(f => {
+        const card = f.closest(".t-video");
+        card.innerHTML = card.dataset.thumb;
+      });
+      playing = false;
+    };
+
+    // Auto-advance: one card every 4 seconds.
+    setInterval(() => {
+      if (reduced || hovered || playing || document.hidden || Date.now() < holdUntil) return;
+      wrap();
+      track.scrollBy({ left: stepSize(), behavior: "smooth" });
+    }, 1100);
+
+    tSlider.addEventListener("mouseenter", () => { hovered = true; });
+    tSlider.addEventListener("mouseleave", () => { hovered = false; });
+    track.addEventListener("touchstart", () => { holdUntil = Date.now() + 6000; }, { passive: true });
+
+    // Click a card -> swap thumbnail for the autoplaying YouTube player.
+    track.addEventListener("click", e => {
+      if (e.target.closest(".yt-link")) return; // let the YouTube link work normally
+      const card = e.target.closest(".t-video");
+      if (!card || card.querySelector("iframe")) return;
+      stopVideos();
+      card.innerHTML =
+        '<iframe src="https://www.youtube.com/embed/' + card.dataset.yt +
+        '?autoplay=1&rel=0&playsinline=1" title="Resident testimonial video" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>' +
+        ytLink(card.dataset.yt);
+      playing = true;
+    });
+
+    tSlider.querySelector(".prev").addEventListener("click", () => {
+      stopVideos();
+      holdUntil = Date.now() + 6000;
+      if (track.scrollLeft < stepSize()) {
+        track.style.scrollBehavior = "auto";
+        track.scrollLeft += setWidth;
+        track.style.scrollBehavior = "";
+      }
+      track.scrollBy({ left: -stepSize(), behavior: "smooth" });
+    });
+    tSlider.querySelector(".next").addEventListener("click", () => {
+      stopVideos();
+      holdUntil = Date.now() + 6000;
+      wrap();
+      track.scrollBy({ left: stepSize(), behavior: "smooth" });
+    });
+  }
+
   /* ---------- 3. Video playlist ---------- */
   const videoFrame = document.getElementById("videoFrame");
   const videoList = document.getElementById("videoList");
@@ -100,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Replace VIDEO_ID_x in the HTML with real YouTube video IDs.
     videoFrame.innerHTML =
       '<iframe src="https://www.youtube.com/embed/' + id +
-      '?autoplay=1&rel=0" title="Project video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      '?autoplay=1&rel=0" title="Project video" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
   }
 
   if (videoList) {
