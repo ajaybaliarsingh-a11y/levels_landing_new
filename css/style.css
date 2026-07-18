@@ -192,9 +192,8 @@ button { font-family: inherit; cursor: pointer; }
 .offer-badge-alt strong { color: var(--gold-dark); }
 .offer-or { font-style: italic; color: var(--grey); }
 .hero-brandmark { margin-top: var(--s1); }
-.hb-name { display: block; font-size: 1.4rem; letter-spacing: 0.28em; font-weight: 400; }
-.hb-name b { color: var(--gold-dark); }
-.hb-loc { font-size: 0.65rem; letter-spacing: 0.35em; color: var(--grey); }
+.hb-name { display: block; font-size: 1.4rem; font-weight: 700; color: var(--gold-dark); }
+.hb-loc { font-size: 0.65rem; letter-spacing: 0.12em; color: var(--grey); }
 
 /* ---------- Lead form band ---------- */
 .lead-band { background: var(--mist); padding: var(--s6) 0; border-block: 1px solid var(--line); }
