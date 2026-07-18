@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (reduced || hovered || playing || document.hidden || Date.now() < holdUntil) return;
       wrap();
       track.scrollBy({ left: stepSize(), behavior: "smooth" });
-    }, 1100);
+    }, 1700);
 
     tSlider.addEventListener("mouseenter", () => { hovered = true; });
     tSlider.addEventListener("mouseleave", () => { hovered = false; });
